@@ -29,8 +29,7 @@
         <line id="daily-x-axis" class="axis"></line>
         <g id="daily-months"></g>
         <polyline id="daily-line"></polyline>
-        <text id="daily-max" text-anchor="end"></text>
-        <text id="daily-min" text-anchor="end"></text>
+        <g id="daily-y-labels"></g>
         <text id="daily-y-title" class="axis-title" text-anchor="middle">Daily total (rides)</text>
         <text id="daily-x-title" class="axis-title" text-anchor="middle">Date</text>
       </svg>
@@ -71,23 +70,6 @@
     const plotWidth = width - pad.left - pad.right;
     const plotHeight = height - pad.top - pad.bottom;
 
-    const totals = dailyTotals(rows);
-    const geometry = linePoints(totals.map((day) => day.rides), plotWidth, plotHeight);
-    const plotBottom = pad.top + plotHeight;
-    const first = totals[0].date;
-    const last = totals[totals.length - 1].date;
-
-    const svg = document.getElementById("daily-chart");
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-    svg.setAttribute(
-      "aria-label",
-      `Line chart of daily total rides from ${first} to ${last}, ranging from ${geometry.min.toLocaleString()} to ${geometry.max.toLocaleString()}.`,
-    );
-
-    const polyline = document.getElementById("daily-line");
-    polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
-    polyline.setAttribute("points", geometry.points);
-
     const setAttrs = (el, attributes) => {
       for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
       return el;
@@ -101,26 +83,53 @@
       return el;
     };
 
-    setAttrs(byId("daily-y-axis"), { x1: pad.left, y1: pad.top, x2: pad.left, y2: plotBottom });
-    setAttrs(byId("daily-x-axis"), { x1: pad.left, y1: plotBottom, x2: width - pad.right, y2: plotBottom });
+    function drawDailyTotalChart(totals) {
+      const geometry = linePoints(totals.map((day) => day.rides), plotWidth, plotHeight);
+      const plotBottom = pad.top + plotHeight;
+      const first = totals[0].date;
+      const last = totals[totals.length - 1].date;
 
-    byId("daily-max").textContent = geometry.max.toLocaleString();
-    setAttrs(byId("daily-max"), { x: pad.left - 6, y: pad.top + 4 });
-    byId("daily-min").textContent = geometry.min.toLocaleString();
-    setAttrs(byId("daily-min"), { x: pad.left - 6, y: plotBottom + 4 });
-
-    const titleX = 14;
-    const titleY = pad.top + plotHeight / 2;
-    setAttrs(byId("daily-y-title"), { x: titleX, y: titleY, transform: `rotate(-90 ${titleX} ${titleY})` });
-    setAttrs(byId("daily-x-title"), { x: pad.left + plotWidth / 2, y: height - 6 });
-
-    const months = byId("daily-months");
-    for (const { x, label } of monthTicks(totals.map((day) => day.date), plotWidth)) {
-      const tickX = pad.left + x;
-      months.append(
-        svgElement("line", { class: "axis", x1: tickX, y1: plotBottom, x2: tickX, y2: plotBottom + 5 }),
-        svgText(label, { x: tickX, y: plotBottom + 18, "text-anchor": "middle" }),
+      const svg = byId("daily-chart");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute(
+        "aria-label",
+        `Line chart of daily total rides from ${first} to ${last}, ranging from ${geometry.min.toLocaleString()} to ${geometry.max.toLocaleString()}.`,
       );
+
+      const polyline = byId("daily-line");
+      polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
+      polyline.setAttribute("points", geometry.points);
+      polyline.classList.toggle("lone-point", totals.length === 1);
+
+      setAttrs(byId("daily-y-axis"), { x1: pad.left, y1: pad.top, x2: pad.left, y2: plotBottom });
+      setAttrs(byId("daily-x-axis"), { x1: pad.left, y1: plotBottom, x2: width - pad.right, y2: plotBottom });
+
+      for (const { value, y } of geometry.yLabels) {
+        byId("daily-y-labels").append(
+          svgText(value.toLocaleString(), { x: pad.left - 6, y: pad.top + y + 4, "text-anchor": "end" }),
+        );
+      }
+
+      const titleX = 14;
+      const titleY = pad.top + plotHeight / 2;
+      setAttrs(byId("daily-y-title"), { x: titleX, y: titleY, transform: `rotate(-90 ${titleX} ${titleY})` });
+      setAttrs(byId("daily-x-title"), { x: pad.left + plotWidth / 2, y: height - 6 });
+
+      const months = byId("daily-months");
+      for (const { x, label } of monthTicks(totals.map((day) => day.date), plotWidth)) {
+        const tickX = pad.left + x;
+        months.append(
+          svgElement("line", { class: "axis", x1: tickX, y1: plotBottom, x2: tickX, y2: plotBottom + 5 }),
+          svgText(label, { x: tickX, y: plotBottom + 18, "text-anchor": "middle" }),
+        );
+      }
+    }
+
+    const totals = dailyTotals(rows);
+    if (totals.length === 0) {
+      byId("daily-chart").remove();
+    } else {
+      drawDailyTotalChart(totals);
     }
   </script>
 </body>

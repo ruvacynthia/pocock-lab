@@ -14,3 +14,14 @@ export function ridesByCity(rows) {
     .map(([city, rides]) => ({ city, rides }))
     .sort((a, b) => a.city.localeCompare(b.city));
 }
+
+// Daily total: rides across all cities on each date, sorted by date.
+export function dailyTotals(rows) {
+  const totals = new Map();
+  for (const row of rows) {
+    totals.set(row.date, (totals.get(row.date) ?? 0) + Number(row.rides));
+  }
+  return [...totals.entries()]
+    .map(([date, rides]) => ({ date, rides }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}

@@ -46,14 +46,28 @@ test("linePoints draws equal values as a flat line across the vertical middle", 
   assert.equal(linePoints([400, 400, 400], 100, 50).points, "0,25 50,25 100,25");
 });
 
-test("linePoints puts a single value at the left edge, vertically centred", () => {
-  assert.equal(linePoints([400], 100, 50).points, "0,25");
+test("linePoints draws a single value as a dot at the left edge, vertically centred", () => {
+  // Repeated so the stroke has a zero-length segment to cap into a dot.
+  assert.equal(linePoints([400], 100, 50).points, "0,25 0,25");
 });
 
-test("linePoints returns no points for an empty series", () => {
-  assert.equal(linePoints([], 100, 50).points, "");
+test("linePoints returns no points or labels for an empty series", () => {
+  const { points, yLabels } = linePoints([], 100, 50);
+  assert.equal(points, "");
+  assert.deepEqual(yLabels, []);
 });
 
 test("monthTicks puts a lone first-of-month date at the left edge", () => {
   assert.deepEqual(monthTicks(["2026-07-01"], 100), [{ x: 0, label: "Jul" }]);
+});
+
+test("linePoints labels the largest value at the top and the smallest at the bottom", () => {
+  assert.deepEqual(linePoints([10, 30, 20], 100, 50).yLabels, [
+    { value: 30, y: 0 },
+    { value: 10, y: 50 },
+  ]);
+});
+
+test("linePoints labels equal values once, level with the flat line", () => {
+  assert.deepEqual(linePoints([400, 400], 100, 50).yLabels, [{ value: 400, y: 25 }]);
 });

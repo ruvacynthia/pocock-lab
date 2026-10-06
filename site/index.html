@@ -88,34 +88,38 @@
     polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
     polyline.setAttribute("points", geometry.points);
 
-    const place = (el, attributes) => {
+    const setAttrs = (el, attributes) => {
       for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
       return el;
     };
     const byId = (id) => document.getElementById(id);
-    const svgElement = (name) => document.createElementNS("http://www.w3.org/2000/svg", name);
+    const svgElement = (name, attributes) =>
+      setAttrs(document.createElementNS("http://www.w3.org/2000/svg", name), attributes);
+    const svgText = (text, attributes) => {
+      const el = svgElement("text", attributes);
+      el.textContent = text;
+      return el;
+    };
 
-    place(byId("daily-y-axis"), { x1: pad.left, y1: pad.top, x2: pad.left, y2: plotBottom });
-    place(byId("daily-x-axis"), { x1: pad.left, y1: plotBottom, x2: width - pad.right, y2: plotBottom });
+    setAttrs(byId("daily-y-axis"), { x1: pad.left, y1: pad.top, x2: pad.left, y2: plotBottom });
+    setAttrs(byId("daily-x-axis"), { x1: pad.left, y1: plotBottom, x2: width - pad.right, y2: plotBottom });
 
     byId("daily-max").textContent = geometry.max.toLocaleString();
-    place(byId("daily-max"), { x: pad.left - 6, y: pad.top + 4 });
+    setAttrs(byId("daily-max"), { x: pad.left - 6, y: pad.top + 4 });
     byId("daily-min").textContent = geometry.min.toLocaleString();
-    place(byId("daily-min"), { x: pad.left - 6, y: plotBottom + 4 });
+    setAttrs(byId("daily-min"), { x: pad.left - 6, y: plotBottom + 4 });
 
     const titleX = 14;
     const titleY = pad.top + plotHeight / 2;
-    place(byId("daily-y-title"), { x: titleX, y: titleY, transform: `rotate(-90 ${titleX} ${titleY})` });
-    place(byId("daily-x-title"), { x: pad.left + plotWidth / 2, y: height - 6 });
+    setAttrs(byId("daily-y-title"), { x: titleX, y: titleY, transform: `rotate(-90 ${titleX} ${titleY})` });
+    setAttrs(byId("daily-x-title"), { x: pad.left + plotWidth / 2, y: height - 6 });
 
     const months = byId("daily-months");
     for (const { x, label } of monthTicks(totals.map((day) => day.date), plotWidth)) {
       const tickX = pad.left + x;
       months.append(
-        place(svgElement("line"), { class: "axis", x1: tickX, y1: plotBottom, x2: tickX, y2: plotBottom + 5 }),
-        Object.assign(place(svgElement("text"), { x: tickX, y: plotBottom + 18, "text-anchor": "middle" }), {
-          textContent: label,
-        }),
+        svgElement("line", { class: "axis", x1: tickX, y1: plotBottom, x2: tickX, y2: plotBottom + 5 }),
+        svgText(label, { x: tickX, y: plotBottom + 18, "text-anchor": "middle" }),
       );
     }
   </script>

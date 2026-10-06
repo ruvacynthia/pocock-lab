@@ -25,18 +25,21 @@
     <section>
       <h2>Daily total</h2>
       <svg id="daily-chart" class="line-chart" role="img">
+        <line id="daily-y-axis" class="axis"></line>
+        <line id="daily-x-axis" class="axis"></line>
+        <g id="daily-months"></g>
         <polyline id="daily-line"></polyline>
         <text id="daily-max" text-anchor="end"></text>
         <text id="daily-min" text-anchor="end"></text>
-        <text id="daily-first" text-anchor="start"></text>
-        <text id="daily-last" text-anchor="end"></text>
+        <text id="daily-y-title" class="axis-title" text-anchor="middle">Daily total (rides)</text>
+        <text id="daily-x-title" class="axis-title" text-anchor="middle">Date</text>
       </svg>
     </section>
   </main>
   <script type="module">
     import { parseCsv } from "./src/csv.js";
     import { totalRides, ridesByCity, dailyTotals } from "./src/stats.js";
-    import { linePoints } from "./src/chart.js";
+    import { linePoints, monthTicks } from "./src/chart.js";
 
     const response = await fetch("./data/rides.csv");
     const rows = parseCsv(await response.text());
@@ -61,15 +64,16 @@
     }
 
     // Daily total chart layout, in viewBox units: the plot sits inside the
-    // padding, which holds the axis labels.
+    // padding, which holds the axis labels and titles.
     const width = 600;
-    const height = 200;
-    const pad = { top: 10, right: 10, bottom: 25, left: 40 };
+    const height = 230;
+    const pad = { top: 10, right: 10, bottom: 45, left: 64 };
     const plotWidth = width - pad.left - pad.right;
     const plotHeight = height - pad.top - pad.bottom;
 
     const totals = dailyTotals(rows);
     const geometry = linePoints(totals.map((day) => day.rides), plotWidth, plotHeight);
+    const plotBottom = pad.top + plotHeight;
     const first = totals[0].date;
     const last = totals[totals.length - 1].date;
 
@@ -84,16 +88,40 @@
     polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
     polyline.setAttribute("points", geometry.points);
 
-    const label = (id, text, x, y) => {
-      const el = document.getElementById(id);
-      el.textContent = text;
-      el.setAttribute("x", x);
-      el.setAttribute("y", y);
+    const setAttrs = (el, attributes) => {
+      for (const [name, value] of Object.entries(attributes)) el.setAttribute(name, value);
+      return el;
     };
-    label("daily-max", geometry.max.toLocaleString(), pad.left - 6, pad.top + 4);
-    label("daily-min", geometry.min.toLocaleString(), pad.left - 6, pad.top + plotHeight + 4);
-    label("daily-first", first, pad.left, height - 4);
-    label("daily-last", last, width - pad.right, height - 4);
+    const byId = (id) => document.getElementById(id);
+    const svgElement = (name, attributes) =>
+      setAttrs(document.createElementNS("http://www.w3.org/2000/svg", name), attributes);
+    const svgText = (text, attributes) => {
+      const el = svgElement("text", attributes);
+      el.textContent = text;
+      return el;
+    };
+
+    setAttrs(byId("daily-y-axis"), { x1: pad.left, y1: pad.top, x2: pad.left, y2: plotBottom });
+    setAttrs(byId("daily-x-axis"), { x1: pad.left, y1: plotBottom, x2: width - pad.right, y2: plotBottom });
+
+    byId("daily-max").textContent = geometry.max.toLocaleString();
+    setAttrs(byId("daily-max"), { x: pad.left - 6, y: pad.top + 4 });
+    byId("daily-min").textContent = geometry.min.toLocaleString();
+    setAttrs(byId("daily-min"), { x: pad.left - 6, y: plotBottom + 4 });
+
+    const titleX = 14;
+    const titleY = pad.top + plotHeight / 2;
+    setAttrs(byId("daily-y-title"), { x: titleX, y: titleY, transform: `rotate(-90 ${titleX} ${titleY})` });
+    setAttrs(byId("daily-x-title"), { x: pad.left + plotWidth / 2, y: height - 6 });
+
+    const months = byId("daily-months");
+    for (const { x, label } of monthTicks(totals.map((day) => day.date), plotWidth)) {
+      const tickX = pad.left + x;
+      months.append(
+        svgElement("line", { class: "axis", x1: tickX, y1: plotBottom, x2: tickX, y2: plotBottom + 5 }),
+        svgText(label, { x: tickX, y: plotBottom + 18, "text-anchor": "middle" }),
+      );
+    }
   </script>
 </body>
 </html>

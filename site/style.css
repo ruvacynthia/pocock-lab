@@ -10,3 +10,5 @@ th { background: #f2f2f2; }
 .line-chart { display: block; width: 100%; height: auto; margin: 1rem 0; }
 .line-chart polyline { fill: none; stroke: #028090; stroke-width: 2; stroke-linejoin: round; }
 .line-chart text { font-size: 12px; fill: #1f1f1f; }
+.line-chart .axis { stroke: #9a9a9a; stroke-width: 1; }
+.line-chart .axis-title { font-weight: 600; }

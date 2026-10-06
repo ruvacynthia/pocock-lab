@@ -29,8 +29,7 @@
         <line id="daily-x-axis" class="axis"></line>
         <g id="daily-months"></g>
         <polyline id="daily-line"></polyline>
-        <text id="daily-max" text-anchor="end"></text>
-        <text id="daily-min" text-anchor="end"></text>
+        <g id="daily-y-labels"></g>
         <text id="daily-y-title" class="axis-title" text-anchor="middle">Daily total (rides)</text>
         <text id="daily-x-title" class="axis-title" text-anchor="middle">Date</text>
       </svg>
@@ -99,23 +98,16 @@
 
       const polyline = byId("daily-line");
       polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
-      // A lone point has no length to stroke; repeating it draws a round-capped dot.
-      const lonePoint = totals.length === 1;
-      polyline.setAttribute("points", lonePoint ? `${geometry.points} ${geometry.points}` : geometry.points);
-      polyline.classList.toggle("lone-point", lonePoint);
+      polyline.setAttribute("points", geometry.points);
+      polyline.classList.toggle("lone-point", totals.length === 1);
 
       setAttrs(byId("daily-y-axis"), { x1: pad.left, y1: pad.top, x2: pad.left, y2: plotBottom });
       setAttrs(byId("daily-x-axis"), { x1: pad.left, y1: plotBottom, x2: width - pad.right, y2: plotBottom });
 
-      byId("daily-max").textContent = geometry.max.toLocaleString();
-      byId("daily-min").textContent = geometry.min.toLocaleString();
-      if (geometry.min === geometry.max) {
-        // Equal values sit across the middle, so label that one value there.
-        setAttrs(byId("daily-max"), { x: pad.left - 6, y: pad.top + plotHeight / 2 + 4 });
-        byId("daily-min").remove();
-      } else {
-        setAttrs(byId("daily-max"), { x: pad.left - 6, y: pad.top + 4 });
-        setAttrs(byId("daily-min"), { x: pad.left - 6, y: plotBottom + 4 });
+      for (const { value, y } of geometry.yLabels) {
+        byId("daily-y-labels").append(
+          svgText(value.toLocaleString(), { x: pad.left - 6, y: pad.top + y + 4, "text-anchor": "end" }),
+        );
       }
 
       const titleX = 14;

@@ -8,8 +8,8 @@ th { background: #f2f2f2; }
 .bars { display: flex; flex-direction: column; gap: 0.4rem; margin: 1rem 0; }
 .bar { background: #028090; color: #ffffff; padding: 0.3rem 0.6rem; border-radius: 3px; white-space: nowrap; min-width: 6rem; }
 .line-chart { display: block; width: 100%; height: auto; margin: 1rem 0; }
-.line-chart polyline { fill: none; stroke: #028090; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.line-chart polyline { fill: none; stroke: #028090; stroke-width: 2; stroke-linejoin: round; }
+.line-chart polyline.lone-point { stroke-width: 8; stroke-linecap: round; }
 .line-chart text { font-size: 12px; fill: #1f1f1f; }
 .line-chart .axis { stroke: #9a9a9a; stroke-width: 1; }
 .line-chart .axis-title { font-weight: 600; }
-.line-chart polyline.lone-point { stroke-width: 8; }

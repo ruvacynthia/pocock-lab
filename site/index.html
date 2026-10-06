@@ -24,12 +24,12 @@
     </section>
     <section>
       <h2>Daily total</h2>
-      <svg id="daily-chart" class="line-chart" viewBox="0 0 600 200" role="img">
-        <polyline id="daily-line" transform="translate(40 10)"></polyline>
-        <text id="daily-max" x="34" y="14" text-anchor="end"></text>
-        <text id="daily-min" x="34" y="179" text-anchor="end"></text>
-        <text id="daily-first" x="40" y="196" text-anchor="start"></text>
-        <text id="daily-last" x="590" y="196" text-anchor="end"></text>
+      <svg id="daily-chart" class="line-chart" role="img">
+        <polyline id="daily-line"></polyline>
+        <text id="daily-max" text-anchor="end"></text>
+        <text id="daily-min" text-anchor="end"></text>
+        <text id="daily-first" text-anchor="start"></text>
+        <text id="daily-last" text-anchor="end"></text>
       </svg>
     </section>
   </main>
@@ -60,19 +60,40 @@
       chart.appendChild(bar);
     }
 
+    // Daily total chart layout, in viewBox units: the plot sits inside the
+    // padding, which holds the axis labels.
+    const width = 600;
+    const height = 200;
+    const pad = { top: 10, right: 10, bottom: 25, left: 40 };
+    const plotWidth = width - pad.left - pad.right;
+    const plotHeight = height - pad.top - pad.bottom;
+
     const totals = dailyTotals(rows);
-    const line = linePoints(totals.map((d) => d.rides), 550, 165);
+    const geometry = linePoints(totals.map((day) => day.rides), plotWidth, plotHeight);
     const first = totals[0].date;
     const last = totals[totals.length - 1].date;
-    document.getElementById("daily-line").setAttribute("points", line.points);
-    document.getElementById("daily-max").textContent = line.max.toLocaleString();
-    document.getElementById("daily-min").textContent = line.min.toLocaleString();
-    document.getElementById("daily-first").textContent = first;
-    document.getElementById("daily-last").textContent = last;
-    document.getElementById("daily-chart").setAttribute(
+
+    const svg = document.getElementById("daily-chart");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute(
       "aria-label",
-      `Line chart of daily total rides from ${first} to ${last}, ranging from ${line.min.toLocaleString()} to ${line.max.toLocaleString()}.`,
+      `Line chart of daily total rides from ${first} to ${last}, ranging from ${geometry.min.toLocaleString()} to ${geometry.max.toLocaleString()}.`,
     );
+
+    const polyline = document.getElementById("daily-line");
+    polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
+    polyline.setAttribute("points", geometry.points);
+
+    const label = (id, text, x, y) => {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.setAttribute("x", x);
+      el.setAttribute("y", y);
+    };
+    label("daily-max", geometry.max.toLocaleString(), pad.left - 6, pad.top + 4);
+    label("daily-min", geometry.min.toLocaleString(), pad.left - 6, pad.top + plotHeight + 4);
+    label("daily-first", first, pad.left, height - 4);
+    label("daily-last", last, width - pad.right, height - 4);
   </script>
 </body>
 </html>

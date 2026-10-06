@@ -22,10 +22,21 @@
       </table>
       <div id="chart" class="bars" role="img" aria-label="Bar chart of rides by city"></div>
     </section>
+    <section>
+      <h2>Daily total</h2>
+      <svg id="daily-chart" class="line-chart" viewBox="0 0 600 200" role="img">
+        <polyline id="daily-line" transform="translate(40 10)"></polyline>
+        <text id="daily-max" x="34" y="14" text-anchor="end"></text>
+        <text id="daily-min" x="34" y="179" text-anchor="end"></text>
+        <text id="daily-first" x="40" y="196" text-anchor="start"></text>
+        <text id="daily-last" x="590" y="196" text-anchor="end"></text>
+      </svg>
+    </section>
   </main>
   <script type="module">
     import { parseCsv } from "./src/csv.js";
-    import { totalRides, ridesByCity } from "./src/stats.js";
+    import { totalRides, ridesByCity, dailyTotals } from "./src/stats.js";
+    import { linePoints } from "./src/chart.js";
 
     const response = await fetch("./data/rides.csv");
     const rows = parseCsv(await response.text());
@@ -48,6 +59,20 @@
       bar.textContent = `${city} ${rides.toLocaleString()}`;
       chart.appendChild(bar);
     }
+
+    const totals = dailyTotals(rows);
+    const line = linePoints(totals.map((d) => d.rides), 550, 165);
+    const first = totals[0].date;
+    const last = totals[totals.length - 1].date;
+    document.getElementById("daily-line").setAttribute("points", line.points);
+    document.getElementById("daily-max").textContent = line.max.toLocaleString();
+    document.getElementById("daily-min").textContent = line.min.toLocaleString();
+    document.getElementById("daily-first").textContent = first;
+    document.getElementById("daily-last").textContent = last;
+    document.getElementById("daily-chart").setAttribute(
+      "aria-label",
+      `Line chart of daily total rides from ${first} to ${last}, ranging from ${line.min.toLocaleString()} to ${line.max.toLocaleString()}.`,
+    );
   </script>
 </body>
 </html>

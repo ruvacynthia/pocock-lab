@@ -58,3 +58,7 @@ test("dailyTotals keeps a date where only some cities have rows", () => {
     ],
   );
 });
+
+test("dailyTotals returns no daily totals for no rows", () => {
+  assert.deepEqual(dailyTotals([]), []);
+});

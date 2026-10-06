@@ -41,3 +41,19 @@ test("monthTicks labels months across a year boundary", () => {
     { x: 100, label: "Jul" },
   ]);
 });
+
+test("linePoints draws equal values as a flat line across the vertical middle", () => {
+  assert.equal(linePoints([400, 400, 400], 100, 50).points, "0,25 50,25 100,25");
+});
+
+test("linePoints puts a single value at the left edge, vertically centred", () => {
+  assert.equal(linePoints([400], 100, 50).points, "0,25");
+});
+
+test("linePoints returns no points for an empty series", () => {
+  assert.equal(linePoints([], 100, 50).points, "");
+});
+
+test("monthTicks puts a lone first-of-month date at the left edge", () => {
+  assert.deepEqual(monthTicks(["2026-07-01"], 100), [{ x: 0, label: "Jul" }]);
+});

@@ -1,18 +1,21 @@
 // Geometry for inline SVG charts. Knows nothing about rides: it takes plain
 // numbers for values and ISO dates (YYYY-MM-DD) for the horizontal axis.
 
-// x position of the i-th of `count` items spread evenly across the width.
+// x position of the i-th of `count` items spread evenly across the width; a lone
+// item sits at the left edge.
 function xAt(i, count, width) {
-  return (i * width) / (count - 1);
+  return count === 1 ? 0 : (i * width) / (count - 1);
 }
 
 // Points for an SVG polyline: values spread evenly across the width in order,
-// the largest value at the top (y = 0) and the smallest at the bottom.
+// the largest value at the top (y = 0) and the smallest at the bottom. Equal
+// values sit across the vertical middle.
 export function linePoints(values, width, height) {
   const min = Math.min(...values);
   const max = Math.max(...values);
+  const yAt = (value) => (max === min ? height / 2 : height - ((value - min) / (max - min)) * height);
   const points = values
-    .map((value, i) => `${xAt(i, values.length, width)},${height - ((value - min) / (max - min)) * height}`)
+    .map((value, i) => `${xAt(i, values.length, width)},${yAt(value)}`)
     .join(" ");
   return { points, min, max };
 }

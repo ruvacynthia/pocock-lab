@@ -22,10 +22,21 @@
       </table>
       <div id="chart" class="bars" role="img" aria-label="Bar chart of rides by city"></div>
     </section>
+    <section>
+      <h2>Daily total</h2>
+      <svg id="daily-chart" class="line-chart" role="img">
+        <polyline id="daily-line"></polyline>
+        <text id="daily-max" text-anchor="end"></text>
+        <text id="daily-min" text-anchor="end"></text>
+        <text id="daily-first" text-anchor="start"></text>
+        <text id="daily-last" text-anchor="end"></text>
+      </svg>
+    </section>
   </main>
   <script type="module">
     import { parseCsv } from "./src/csv.js";
-    import { totalRides, ridesByCity } from "./src/stats.js";
+    import { totalRides, ridesByCity, dailyTotals } from "./src/stats.js";
+    import { linePoints } from "./src/chart.js";
 
     const response = await fetch("./data/rides.csv");
     const rows = parseCsv(await response.text());
@@ -48,6 +59,41 @@
       bar.textContent = `${city} ${rides.toLocaleString()}`;
       chart.appendChild(bar);
     }
+
+    // Daily total chart layout, in viewBox units: the plot sits inside the
+    // padding, which holds the axis labels.
+    const width = 600;
+    const height = 200;
+    const pad = { top: 10, right: 10, bottom: 25, left: 40 };
+    const plotWidth = width - pad.left - pad.right;
+    const plotHeight = height - pad.top - pad.bottom;
+
+    const totals = dailyTotals(rows);
+    const geometry = linePoints(totals.map((day) => day.rides), plotWidth, plotHeight);
+    const first = totals[0].date;
+    const last = totals[totals.length - 1].date;
+
+    const svg = document.getElementById("daily-chart");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute(
+      "aria-label",
+      `Line chart of daily total rides from ${first} to ${last}, ranging from ${geometry.min.toLocaleString()} to ${geometry.max.toLocaleString()}.`,
+    );
+
+    const polyline = document.getElementById("daily-line");
+    polyline.setAttribute("transform", `translate(${pad.left} ${pad.top})`);
+    polyline.setAttribute("points", geometry.points);
+
+    const label = (id, text, x, y) => {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.setAttribute("x", x);
+      el.setAttribute("y", y);
+    };
+    label("daily-max", geometry.max.toLocaleString(), pad.left - 6, pad.top + 4);
+    label("daily-min", geometry.min.toLocaleString(), pad.left - 6, pad.top + plotHeight + 4);
+    label("daily-first", first, pad.left, height - 4);
+    label("daily-last", last, width - pad.right, height - 4);
   </script>
 </body>
 </html>
